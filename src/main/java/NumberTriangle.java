@@ -89,6 +89,7 @@ public class NumberTriangle {
      */
     public int retrieve(String path) {
         // TODO implement this method
+
         return -1;
     }
 
@@ -123,12 +124,17 @@ public class NumberTriangle {
             System.out.println(line);
 
             // TODO process the line
+            int[] row = readLineNumbers(line);
 
             //read the next line
             line = br.readLine();
         }
         br.close();
         return top;
+    }
+
+    private static int[] readLineNumbers(String line) {
+        return new int[0];
     }
 
     public static void main(String[] args) throws IOException {
