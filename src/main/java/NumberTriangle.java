@@ -1,4 +1,9 @@
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 /**
  * This is the provided NumberTriangle class to be used in this coding task.
@@ -64,6 +69,15 @@ public class NumberTriangle {
      */
     public void maxSumPath() {
         // for fun [not for credit]:
+        System.out.println(getMaxSumPath(this));
+    }
+
+    private int getMaxSumPath(NumberTriangle numberTriangle) {
+        if (numberTriangle.isLeaf()) {
+            return numberTriangle.getRoot();
+        }
+
+        return Math.max(getMaxSumPath(numberTriangle.left), getMaxSumPath(numberTriangle.right)) + numberTriangle.getRoot();
     }
 
 
@@ -71,6 +85,9 @@ public class NumberTriangle {
         return right == null && left == null;
     }
 
+    public String toString() {
+        return getRoot() + "[L: " + (left != null ? left.getRoot() : null) + " R:" + (right == null ? null : right.getRoot()) + "]";
+    }
 
     /**
      * Follow path through this NumberTriangle structure ('l' = left; 'r' = right) and
@@ -88,8 +105,28 @@ public class NumberTriangle {
      *
      */
     public int retrieve(String path) {
-        // TODO implement this method
-        return -1;
+        // TODO implement this
+        if (path == null) {
+            return -1;
+        }
+
+        NumberTriangle node = this;
+        for (int i = 0; i < path.length(); i++) {
+            // go to left node if l
+            if (path.charAt(i) == 'l') {
+                node = node.left;
+            }
+            // go to right node if r
+            if (path.charAt(i) == 'r') {
+                node = node.right;
+            }
+
+            if (node == null) {
+                return -1;
+            }
+        }
+        // when node is the leaf
+        return node.getRoot();
     }
 
     /** Read in the NumberTriangle structure from a file.
@@ -109,7 +146,6 @@ public class NumberTriangle {
         InputStream inputStream = NumberTriangle.class.getClassLoader().getResourceAsStream(fname);
         BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
 
-
         // TODO define any variables that you want to use to store things
 
         // will need to return the top of the NumberTriangle,
@@ -117,17 +153,63 @@ public class NumberTriangle {
         NumberTriangle top = null;
 
         String line = br.readLine();
+
+        // list to trace parent list
+        Deque<NumberTriangle> parentQueue = new ArrayDeque<>();
+        NumberTriangle parentNumber = null;
+
         while (line != null) {
-
-            // remove when done; this line is included so running starter code prints the contents of the file
-            System.out.println(line);
-
+            // if first number, make it top node
+            if (top == null) {
+                top = new NumberTriangle(Integer.parseInt(line));
+                parentQueue.add(top);
+                parentNumber = parentQueue.poll();
+                line = br.readLine();
+            }
             // TODO process the line
+            // split the numbers from the string by space in between
+            String[] lineNumbers = line.split(" ");
+
+//            System.out.println("Parent list length before adding all children = " + parentQueue.size() + ", tokens=" + lineNumbers.length);
+//
+//            System.out.println("Adding children to node:" + parentNumber);
+
+            NumberTriangle previousNumber = null;
+            // go through the numbers in the current line
+            for (int numberIndex = 0; numberIndex < lineNumbers.length - 1 && parentNumber != null; numberIndex++) {
+                // process a pair of numbers at one time
+                // always add the first of the pair into left child
+                if (previousNumber == null) {
+                    parentNumber.setLeft(new NumberTriangle(Integer.parseInt(lineNumbers[numberIndex])));
+                    parentQueue.offer(parentNumber.left);
+                } else {
+                    parentNumber.setLeft(previousNumber);
+                }
+
+                // check next number without updating numberIndex
+                // because we need to process a pair of number at one time
+                // and may still need to add this number as the left child of its next parent number
+                int next = numberIndex + 1;
+                if (next < lineNumbers.length) {
+                    parentNumber.setRight(new NumberTriangle(Integer.parseInt(lineNumbers[next])));
+                    previousNumber = parentNumber.right;
+                    parentQueue.offer(parentNumber.right);
+                }
+//                System.out.println("Added Children for Node=" + parentNumber);
+                // move to next parent number
+                parentNumber = parentQueue.poll();
+
+//                System.out.println("Next parent: " + parentNumber);
+            }
+
+//            System.out.println("Parent list length after adding all children = " + parentQueue.size());
+//            System.out.println("------------");
 
             //read the next line
             line = br.readLine();
         }
         br.close();
+
         return top;
     }
 
